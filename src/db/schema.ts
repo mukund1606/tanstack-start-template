@@ -6,9 +6,10 @@ import { createTable } from "./utils";
 export const users = createTable("users", (t) => ({
   id: t.varchar("id", { length: 36 }).primaryKey().$defaultFn(generateId),
   name: t.text("name").notNull(),
-  username: t.text("username").notNull().unique(),
+  username: t.varchar("username", { length: 255 }).notNull().unique(),
+  displayUsername: t.text("display_username"),
   email: t.varchar("email", { length: 255 }).notNull(),
-  emailVerified: t.boolean("email_verified").notNull(),
+  emailVerified: t.boolean("email_verified").notNull().default(false), // Logically default to true when user account is created
   image: t.text("image"),
   maxSessions: t.int("max_sessions").notNull().default(1),
   twoFactorEnabled: t.boolean("two_factor_enabled").notNull().default(false), // Logically default to true when user account is created

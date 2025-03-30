@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor, username } from "better-auth/plugins";
+import { inArray } from "drizzle-orm";
 
 import {
   accounts,
@@ -69,6 +70,43 @@ export const auth = betterAuth({
       maxSessions: {
         type: "number",
         required: true,
+      },
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        async before(session) {
+          const userId = session.userId;
+          const user = await db.query.users.findFirst({
+            where: {
+              id: userId,
+            },
+          });
+          if (!user) {
+            return;
+          }
+
+          const maxSessions = user.maxSessions;
+          const sessionsToKeep = maxSessions - 1;
+
+          const oldSessions = await db.query.sessions.findMany({
+            where: {
+              userId: userId,
+            },
+            orderBy: (sessions, { desc }) => [desc(sessions.createdAt)],
+          });
+
+          const tokensToDelete = oldSessions
+            ?.slice(sessionsToKeep)
+            .map((session) => session.token);
+
+          if (tokensToDelete) {
+            await db
+              .delete(sessions)
+              .where(inArray(sessions.token, tokensToDelete));
+          }
+        },
       },
     },
   },
