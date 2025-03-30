@@ -4,7 +4,7 @@ export const Route = createFileRoute("/_layout/")({
   component: RouteComponent,
 });
 
-async function RouteComponent() {
+function RouteComponent() {
   return (
     <center>
       <h1 className="text-2xl font-extrabold">Welcome</h1>
